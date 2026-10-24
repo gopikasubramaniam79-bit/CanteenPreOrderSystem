@@ -1,0 +1,52 @@
+mvn spring-boot:run<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CampusBite | Canteen Pre-Order</title>
+<style>
+:root{--ink:#17251f;--green:#176b4d;--lime:#d7f36b;--cream:#f7f7f0;--muted:#6d7972;--line:#e2e7df}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--cream);color:var(--ink)}
+header{background:var(--ink);color:white;padding:22px max(5vw,22px);display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{font-weight:850;font-size:22px;letter-spacing:-.7px}.brand span{color:var(--lime)}header small{color:#d0d8d2}
+main{max-width:1180px;margin:auto;padding:32px 22px 60px}.hero{background:var(--lime);border-radius:24px;padding:32px;display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:26px}
+.hero h1{font-size:clamp(28px,4vw,46px);line-height:1.05;letter-spacing:-1.6px;margin:0 0 12px;max-width:600px}.hero p{margin:0;color:#43513b}.pill{background:#fff9;border-radius:100px;padding:10px 15px;font-weight:750;white-space:nowrap}
+.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr);gap:22px}.panel{background:white;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 8px 24px #18251d08}
+.panel h2{font-size:20px;margin:0 0 6px}.sub{color:var(--muted);font-size:13px;margin:0 0 18px}.food-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.food{border:1px solid var(--line);border-radius:15px;padding:16px;display:flex;flex-direction:column;gap:10px}.food-top{display:flex;justify-content:space-between;gap:8px}.emoji{font-size:28px}.food h3{margin:0;font-size:16px}.price{font-weight:800;color:var(--green)}.stock{font-size:12px;color:var(--muted)}.qty{display:flex;align-items:center;justify-content:space-between;margin-top:auto}.qty input{width:72px;border:1px solid var(--line);border-radius:9px;padding:9px}
+button{border:0;border-radius:11px;padding:12px 15px;background:var(--green);color:white;font-weight:750;cursor:pointer}button:hover{filter:brightness(1.08)}button:disabled{opacity:.45;cursor:not-allowed}.full{width:100%;margin-top:15px}.secondary{background:#eef3e9;color:var(--ink)}.cart-row{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}.empty{color:var(--muted);font-size:14px;padding:14px 0}.total{display:flex;justify-content:space-between;font-weight:850;font-size:20px;padding:18px 0 5px}.notice{margin-top:13px;padding:12px;border-radius:11px;background:#eff7df;font-size:13px;display:none}.section{margin-top:22px}.orders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.order-card{border:1px solid var(--line);border-radius:14px;padding:15px}.token{font-size:18px;font-weight:900;color:var(--green)}.order-card p{font-size:13px;color:var(--muted);margin:8px 0}.order-card select{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;background:white}.admin-form{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-top:12px}.admin-form input{min-width:0;padding:10px;border:1px solid var(--line);border-radius:9px}.toast{margin:10px 0;color:#9b3a24;font-size:13px}.fine{font-size:12px;color:var(--muted);margin-top:20px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.food-grid{grid-template-columns:1fr 1fr}.orders{grid-template-columns:1fr}.admin-form{grid-template-columns:1fr 1fr}.admin-form button{grid-column:1/-1}}
+@media(max-width:460px){.food-grid{grid-template-columns:1fr}header small{display:none}.hero{padding:24px}}
+</style>
+</head>
+<body>
+<header><div class="brand">Campus<span>Bite.</span></div><small>COLLEGE CANTEEN · PRE-ORDER PORTAL</small></header>
+<main>
+<section class="hero"><div><h1>Good food.<br>Less waiting.</h1><p>Order ahead, collect with your token, get back to your day.</p></div><div class="pill">● Canteen ordering</div></section>
+<div class="layout">
+<section class="panel"><h2>Today's menu</h2><p class="sub">Choose your items and quantities. Stock updates after an order is accepted.</p><div id="foods" class="food-grid"></div><div id="message" class="toast"></div></section>
+<aside class="panel"><h2>Your order</h2><p class="sub">Review your selections before placing the order.</p><div id="cart"><div class="empty">Your cart is empty. Add something tasty!</div></div><div class="total"><span>Total</span><span id="total">₹0.00</span></div><button id="place" class="full" onclick="placeOrder()">Place order →</button><div id="success" class="notice"></div><p class="fine">A unique token is generated for every accepted order. Keep it safe for collection.</p></aside>
+</div>
+<section class="panel section"><h2>Order token board</h2><p class="sub">Track order progress or update status at the counter.</p><div id="orders" class="orders"><div class="empty">No orders yet.</div></div></section>
+<section class="panel section"><h2>Manage menu</h2><p class="sub">Canteen staff can add items or update existing prices and stock. Demo data resets when the server restarts.</p>
+<div class="admin-form"><input id="newName" placeholder="Food item name"><input id="newPrice" type="number" min="0" step=".5" placeholder="Price ₹"><input id="newStock" type="number" min="0" placeholder="Quantity"><button onclick="addFood()">Add item</button></div>
+<div id="manageFoods"></div></section>
+</main>
+<script>
+const money=n=>'₹'+Number(n).toFixed(2);
+let foods=[], quantities={};
+const icons=['🥪','🥞','🍚','☕','🍜','🥗','🍛','🧃'];
+async function api(url,opts={}){const r=await fetch('/api'+url,{headers:{'Content-Type':'application/json'},...opts});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.message||d.error||'Request failed');return d}
+async function refresh(){try{foods=await api('/items');renderFoods();renderCart();renderManage();renderOrders()}catch(e){document.getElementById('message').textContent='Could not connect to server. Start the Java application and refresh.'}}
+function renderFoods(){document.getElementById('foods').innerHTML=foods.map((f,i)=>`<article class="food"><div class="food-top"><span class="emoji">${icons[i%icons.length]}</span><span class="stock">${f.quantity} available</span></div><h3>${esc(f.name)}</h3><div class="price">${money(f.price)}</div><div class="qty"><label class="stock" for="q${f.id}">Quantity</label><input id="q${f.id}" type="number" min="0" max="${f.quantity}" value="${quantities[f.id]||0}" ${f.quantity===0?'disabled':''} onchange="setQty(${f.id},this.value)"></div></article>`).join('')}
+function setQty(id,val){const f=foods.find(x=>x.id===id);quantities[id]=Math.max(0,Math.min(f.quantity,parseInt(val)||0));renderCart()}
+function renderCart(){let chosen=foods.filter(f=>(quantities[f.id]||0)>0);document.getElementById('cart').innerHTML=chosen.length?chosen.map(f=>`<div class="cart-row"><span>${esc(f.name)} × ${quantities[f.id]}</span><strong>${money(f.price*quantities[f.id])}</strong></div>`).join(''):'<div class="empty">Your cart is empty. Add something tasty!</div>';document.getElementById('total').textContent=money(chosen.reduce((s,f)=>s+f.price*(quantities[f.id]||0),0));document.getElementById('place').disabled=!chosen.length}
+async function placeOrder(){const msg=document.getElementById('message');msg.textContent='';try{const order=await api('/orders',{method:'POST',body:JSON.stringify({items:foods.filter(f=>(quantities[f.id]||0)>0).map(f=>({itemId:f.id,quantity:quantities[f.id]}))})});quantities={};document.getElementById('success').style.display='block';document.getElementById('success').innerHTML=`<strong>Order accepted!</strong><br>Your token: <strong>${esc(order.token)}</strong><br>Total: <strong>${money(order.total)}</strong><br>Status: ${esc(order.status)}`;await refresh()}catch(e){msg.textContent=e.message}}
+async function renderOrders(){let orders=await api('/orders');orders=[...orders].reverse();document.getElementById('orders').innerHTML=orders.length?orders.map(o=>`<article class="order-card"><div class="token">${esc(o.token)}</div><p>${o.items.map(i=>`${esc(i.name)} × ${i.quantity}`).join(', ')}</p><p>Total: <strong>${money(o.total)}</strong></p><label class="stock">Order status</label><select onchange="setStatus('${o.token}',this.value)">${['Pending','Preparing','Completed'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select></article>`).join(''):'<div class="empty">No orders yet.</div>'}
+async function setStatus(token,status){try{await api(`/orders/${encodeURIComponent(token)}/status`,{method:'PUT',body:JSON.stringify({status})});await renderOrders()}catch(e){alert(e.message)}}
+function renderManage(){document.getElementById('manageFoods').innerHTML=foods.map(f=>`<div class="cart-row" style="align-items:center;flex-wrap:wrap"><strong>${esc(f.name)}</strong><span>${money(f.price)} · ${f.quantity} in stock</span><button class="secondary" onclick="editFood(${f.id})">Edit price/stock</button></div>`).join('')}
+async function addFood(){const name=document.getElementById('newName').value.trim(),price=Number(document.getElementById('newPrice').value),quantity=Number(document.getElementById('newStock').value);if(!name||document.getElementById('newPrice').value===''||document.getElementById('newStock').value===''||price<0||quantity<0){alert('Enter a name, valid price and quantity.');return}try{await api('/items',{method:'POST',body:JSON.stringify({name,price,quantity})});document.getElementById('newName').value='';document.getElementById('newPrice').value='';document.getElementById('newStock').value='';await refresh()}catch(e){alert(e.message)}}
+async function editFood(id){const f=foods.find(x=>x.id===id);const price=prompt('Price for '+f.name, f.price);if(price===null)return;const stock=prompt('Available quantity for '+f.name,f.quantity);if(stock===null)return;if(price.trim()===''||stock.trim()===''||Number(price)<0||Number(stock)<0||!Number.isFinite(Number(price))||!Number.isInteger(Number(stock))){alert('Enter a valid price and whole-number quantity.');return}try{await api('/items/'+id,{method:'PUT',body:JSON.stringify({name:f.name,price:Number(price),quantity:Number(stock)})});await refresh()}catch(e){alert(e.message)}}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+refresh();
+</script>
+</body></html>
